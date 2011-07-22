@@ -1,0 +1,31 @@
+This is my senior capstone project back in college, an AI to predict the NCAA tournament.  It was written in 2004 and remains largely untouched since then.  One thing to note is that the design of the program will not work for any tournament from 2011 and later.  It could limp along if you ignore the play-in games.
+
+Why don't I critique my own code.
+tl;dr: Code that I wrote years ago is some pretty bad code.
+1. My only defence of using C++ was that it was my primary language at the time.  I didn't know any better.
+2. I know now that you are not supposed to use "using namespace std", but I didn't know that then.  Heck, I didn't even know what it did.  I do now.
+3. The bracket was written using a clever analysis of the bracket pattern.  That is why it is so complex.  I can only justify it in that I wrote it in an academic setting and I did some experimenting.  Too bad the addition of the 12 seed play-in games breaks the pattern so it doesn't work anymore.  If I wrote it now, I would practically hard-code the bracket.  That way additions, even unexpected ones, only require tweaking, not hacks.  At the time, it was the part I was most proud of.  Now I know better.
+4. Debug statements should not be littered around the code.  They are in some classes and not others as I did not discover the debugger until I was well into the project.  Even if I didn't have the debugger, they should have been removed once I was done with them.
+5. They aren't automated unit tests, but at least I had the sense to write tests.
+6. I must apologize for the master class.  It is one giant class when it should be at least 4 smaller classes.  It handled adding the teams, entering the brackets, and updating the status with flags to determine the state and what methods it could use.  Three classes, one for each mode, and a fourth repository of shared data would have been a much better approach.
+7. I did search for a library method to convert an int to a string.  I couldn't find one.  That is why stringconv exists.  I should have searched harder.
+8. The AI part should have extended from the Player class, not the Master class.  That would have removed a parameter in the 6 parameter Player constructor.  I should have listened to my professor.
+9. The AI could have been split into 3 different classes, one for each AI type.
+10. I build the team class to be immutable.  I probably didn't need to do that.
+11. The idea behind no void methods in Bracket was so if something went wrong, it would retrun false and the program could output an error.  Notice that that idea was never actually used so the bool returns do nothing.
+12. The reason that the Bracket class has a teamsIn flag is that if a teams was added after teams started advancing, it would disrupt the layout of the bracket.  So, that step was taken to prevent teams being added once the tournament started.  Was it necessary? I don't think so.
+13. FullBracket is a sign that I didn't understand inheritence.  It was my first experience with it.  There was no need to have protected methods that were just wrapped by both inherited classes.  The master class was probably unnecessary since it was mostly items that was also in the player class.
+14. At least I separated the interface from the core of the code.
+15. The naming could have been improved.  I used so much shorthand that I have a hard time figuring out what it means now.
+16. I didn't have source control at the time.  That is why you see classes marked "Old" and "noAI".
+17. A globals file???!!!!  ewwwww
+18. Yup, I overused pointers.  I didn't want to prove that I was smart, it just seemed easier at the time.
+
+Okay, I'm done bashing myself.
+
+Making sense of the Bracket class:
+The first thing to note is that the rounds are in reverse order.  Round 1 is the finals, Round 2 is the semi-finals, etc.  So, it should have been named roundsRemaining.  This was to make calculations easier.
+The key part of the Bracket class is how it calculates the path to the selected team.  It takes advantage of one pattern.  Take a bracket where the favorites won every match.  For any given match add the seeds of the two competitors.  You will find that the sum of the seeds is 2^roundsRemaining + 1 if you start the seed count with 1 or 2^roundsRemaining - 1 if you start the seed count at zero, which the bracket does.  So, what bracket does is to use that calculation to determine if the seed is a higher or lower seed, notes that, then checks the next round using the favorite of previous round.  This results in a bracket that looks different than brackets normally shown, but the matchups are the same. 
+The bracket uses bitwise operators to use an integer as a boolean array.  Why?  I tought it was neat at the time.  I know better now.  It is set up in such a way that the path of the top edge is 0000 (0), the next one down is 0001 (1), the next one is 0010 (2), and so forth.  This made displaying the bracket much easier.
+How it adds teams: It finds the spot that the new team will be if it wins it's first game.  Its opponent is hoging that spot so it creates a matchup for that spot.  This means that the teams must be added in the order of their seed.  This is why the 12 seed play-in games mess up this program.  It can't arbitrary place a play-in game where it wants.  It must be in a specific order.  If the play-in games were for the 16th seed in all four divisions, the program would have no issue with it.
+The program handles the four divisions by making 5 brackets, the 4 16 team brackets and the final four.  FullBracket manages the 5 brackets.
